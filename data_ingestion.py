@@ -1,5 +1,5 @@
+from utils import generate_daily_csvs
 from data_managers.azure_configurator import AzureConfigurator
-from data_managers.delta_table_manager import DeltaTableManager
 from data_managers.kaggle_data_downloader import KaggleDataDownloader
 
 def main():
@@ -27,22 +27,9 @@ def main():
         storage_account_name=STORAGE_ACCOUNT,
         container_name=CONTAINER_NAME
     )
-    downloaded_files = downloader.download_and_process()
+    downloader.download_and_process()
+    generate_daily_csvs('data/raw/SuperStore_Orders.csv')
 
-    # Configurar tabla Delta
-    DELTA_STORAGE_PATH = f"abfs://{CONTAINER_NAME}@{STORAGE_ACCOUNT}.dfs.core.windows.net/delta_table"
-    delta_manager = DeltaTableManager(DELTA_STORAGE_PATH)
-
-    # Crear tabla con el esquema adecuado
-    from pyspark.sql.types import StructType, StructField, StringType, DateType, DoubleType
-    schema = StructType([
-        StructField("id", StringType(), False),
-        StructField("fecha", DateType(), False),
-        StructField("valor", DoubleType(), True)
-    ])
-
-    delta_manager.create_table(schema)
-    print("Tabla Delta creada en:", DELTA_STORAGE_PATH)
 
 if __name__ == "__main__":
     main()
